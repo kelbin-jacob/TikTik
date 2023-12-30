@@ -8,6 +8,7 @@ const refferalIncomeHistory=require('../Models/refferalIncomeHistory.model')
 
 
 
+
 const userLogin = sequelize.define('user_login', {
     id: {
         type: DataTypes.UUID,

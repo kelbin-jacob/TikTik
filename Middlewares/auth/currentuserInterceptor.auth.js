@@ -101,7 +101,7 @@ const currentUser = async (req, res, next) => {
       },
       include:[userLogin]
     });
-    console.log(user.user_login,"fff");
+ 
     if (!user) {
       return next(
         res.status(401).json({

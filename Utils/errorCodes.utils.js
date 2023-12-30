@@ -20,6 +20,8 @@ module.exports = {
     UNEXPECTED_ERROR:1009,
 
     NO_FILE_SELECTED:1010,
+
+    POST_NOT_FOUND:1011,
   
 
   };
