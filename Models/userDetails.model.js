@@ -36,6 +36,16 @@ const userDetails = sequelize.define(
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      city: {
+        field: "city",
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      language: {
+        field: "language",
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
 
     email: {
       field: "email",
@@ -55,6 +65,12 @@ const userDetails = sequelize.define(
         args: true,
         msg: "username Already Registered.",
       },
+    },
+    userVerification: {
+      field: "user_verification",
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
 
     refferalCode: {
@@ -100,6 +116,7 @@ const userDetails = sequelize.define(
         type: DataTypes.TINYINT,
         allowNull: false,
         defaultValue: 1,
+        //normaluser=1,profesional=2
       },
 
     isActive: {

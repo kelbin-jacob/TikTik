@@ -591,7 +591,16 @@ const addUserDetails = async (req, res, next) => {
     const filePath = process.env.S3_STORAGE_PATH + uploadedFilePath;
 
     // Destructure user details from request body
-    const { firstName, lastName, gender, age, email, userName } = req.body;
+    const {
+      firstName,
+      lastName,
+      gender,
+      age,
+      email,
+      userName,
+      city,
+      language,
+    } = req.body;
 
     // Find user details using the current user's ID
     const userData = await userDetails.findOne({
@@ -618,6 +627,8 @@ const addUserDetails = async (req, res, next) => {
       age: age,
       email: email,
       userName: userName,
+      city: city,
+      language: language,
       profilePhoto: filePath,
     };
 
@@ -657,6 +668,170 @@ const addUserDetails = async (req, res, next) => {
   }
 };
 
+//EDIT USER DETAILS
+const editUserDetails = async (req, res, next) => {
+  const fileCategory = "TikTik/ProfileImage";
+  let filePath;
+
+  try {
+    // Validate request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).send(errors.errors[0].msg);
+    }
+
+    // Check if a file is uploaded
+    // if (!req.file) {
+    //   return res.status(400).json({
+    //     errorCode: ERROR_CODES.NO_FILE_SELECTED,
+    //     message: ERROR_MESSAGES.NO_FILE_SELECTED,
+    //   });
+    // }
+    if (req.file) {
+      // Upload file to S3
+      const uploadedFilePath = await uploads.uploadToS3(req.file, fileCategory);
+      if (uploadedFilePath instanceof Error) {
+        // Handle the error if file upload fails
+        return res.status(400).send(uploadedFilePath.message);
+      }
+
+      // Construct file path for the uploaded file
+      filePath = process.env.S3_STORAGE_PATH + uploadedFilePath;
+    }
+
+    // Destructure user details from request body
+    const {
+      firstName,
+      lastName,
+      gender,
+      age,
+      email,
+      userName,
+      city,
+      language,
+    } = req.body;
+
+    // Find user details using the current user's ID
+    const userData = await userDetails.findOne({
+      where: {
+        userLoginId: req.currentUserObj.userID,
+        isActive: true,
+      },
+      include: [userLogin], // Include associations if necessary
+    });
+
+    // If user data not found, return an error
+    if (!userData) {
+      return res.status(400).json({
+        errorCode: ERROR_CODES.USER_NOT_FOUND,
+        message: ERROR_MESSAGES.USER_NOT_FOUND,
+      });
+    }
+
+    // Construct updated user details object
+    const updatedUserDetails = {
+      firstName: firstName || userData.firstName,
+      lastName: lastName || userData.lastName,
+      gender: gender || userData.gender,
+      age: age || userData.age,
+      email: email || userData.email,
+      userName: userName || userData.userName,
+      city: city || userData.city,
+      language: language || userData.language,
+
+      if(filePath) {
+        profilePhoto = filePath;
+      },
+    };
+
+    // Start a Sequelize transaction
+    const transaction = await userDetails.sequelize.transaction();
+
+    try {
+      // Update user details within the transaction
+      await userDetails.update(updatedUserDetails, {
+        where: {
+          id: userData.id,
+        },
+        transaction, // Pass transaction to ensure atomicity
+      });
+
+      // Commit the transaction
+      await transaction.commit();
+
+      // Reload user data after update
+      await userData.reload();
+
+      // Send updated user data in response
+      return res.status(200).send(userData);
+    } catch (error) {
+      // Rollback transaction if an error occurs
+      await transaction.rollback();
+      throw error; // Throw the error to the outer catch block
+    }
+  } catch (error) {
+    console.log(error, "98u7yt6r5");
+
+    // Handle unexpected errors
+    return res.status(500).json({
+      errorCode: ERROR_CODES.UNEXPECTED_ERROR,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR,
+    });
+  }
+};
+//USER ADD BANK DETAILS
+const userAddBankDetails = async (req, res, next) => {
+  try {
+    const { bankAccountNumber, bankIfscCode, pancardNumber } = req.body;
+    // const bankAccountDetails = {
+    //   name: accountHoldersname,
+    //   ifsc: ifscCode,
+    //   account_number: accountNumber,
+    //   contact: accountHolderPhoneNumber,
+    //   pancardNumber,
+    // };
+
+    // const virtualAccount = await razorpay.virtualAccounts.create({
+    //   account_type: "bank_account",
+    //   bank_account: bankAccountDetails,
+    // });
+    // console.log(virtualAccount, "11111111111");
+
+    // if (virtualAccount && virtualAccount.id) {
+
+    // console.log("Bank account is valid.");
+    const customerDetails = await userDetails.findOne({
+      where: { userLoginId: req.currentUserObj.userID, isActive: true },
+    });
+    if (!customerDetails) {
+      return res.status(400).json({
+        errorCode: ERROR_CODES.USER_NOT_FOUND,
+        message: ERROR_MESSAGES.USER_NOT_FOUND,
+      });
+    }
+    customerDetails.pancardNumber =
+      pancardNumber || customerDetails.pancardNumber;
+    customerDetails.bankAccountNumber =
+      bankAccountNumber || customerDetails.bankAccountNumber;
+    customerDetails.bankIfscCode = bankIfscCode || customerDetails.bankIfscCode;
+    await customerDetails.save();
+
+    return res.status(200).send(customerDetails);
+    // } else {
+    //   console.log("Bank account is not valid.");
+    //   return res.status(400).send("Bank account is not valid.");
+    // }
+  } catch (error) {
+    console.log(error, "09876543");
+    // Handle different types of errors, and return an appropriate response
+
+    return res.status(500).json({
+      errorCode: ERROR_CODES.UNEXPECTED_ERROR,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR,
+    });
+  }
+};
+
 module.exports = {
   addSuperAdmin,
   login,
@@ -667,4 +842,6 @@ module.exports = {
   userLoginData,
   userLoginOtp,
   addUserDetails,
+  editUserDetails,
+  userAddBankDetails,
 };

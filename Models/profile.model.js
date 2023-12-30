@@ -1,8 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require('../DbConfiguration/databaseConnection');
 const { v4: uuidv4 } = require("uuid");
-// const userDetails = require('../Models/userDetails.model')
-// const refferalIncomeHistory=require('../Models/refferalIncomeHistory.model')
+const postLikeModel=require('../Models/postLike.model')
 
 const profile = sequelize.define(
   "profile",
@@ -17,6 +16,11 @@ const profile = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    message: {
+      field: "message",
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
 
     isActive: {
       field: "is_active",
@@ -29,6 +33,8 @@ const profile = sequelize.define(
     tableName: "profile",
   }
 );
+profile.hasMany(postLikeModel)
+postLikeModel.belongsTo(profile)
 
 
 module.exports = profile;

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const userController = require("../Controllers/user.controller");
+const postController = require("../Controllers/post.controller");
 const express = require("express");
 const app = express();
 const uploads = require("../Middlewares/multer/multer.middleware");
@@ -52,6 +53,64 @@ router.post(
   userController.addUserDetails
 );
 
+// User Edit Details
+router.put(
+  "/userEditDetails",
+  uploads.upload.single("image"),
+  currentUserInterceptor.currentUser,
+  userController.editUserDetails
+);
+
+//userAddBankDetails
+router.post(
+  "/addBankDetails",
+  currentUserInterceptor.currentUser,
+  userController.userAddBankDetails
+);
+
+
+//add post
+router.post(
+  "/addPost",
+  uploads.upload.single("postImage"),
+  currentUserInterceptor.currentUser,
+  postController.profilePost
+);
+
+//edit post
+router.put(
+  "/editPost/:id",
+  uploads.upload.single("postImage"),
+  currentUserInterceptor.currentUser,
+  postController.updateProfilePost
+);
+//post like
+router.post(
+  "/postLike/:id",
+  currentUserInterceptor.currentUser,
+  postController.profilePostLike
+);
+
+//profile like
+router.post(
+  "/profileLike",
+  currentUserInterceptor.currentUser,
+  postController.profileLike
+);
+
+//profile follow
+router.post(
+  "/profileFollow",
+  currentUserInterceptor.currentUser,
+  postController.profileFollow
+);
+
+// get users profile by id
+router.get(
+  "/getUserProfileById/:id",
+  currentUserInterceptor.currentUser,
+  postController.getUserProfileById
+);
 
 
 
