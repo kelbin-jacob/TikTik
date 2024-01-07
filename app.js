@@ -8,6 +8,10 @@ const userRoutes=require('./Routes/user.routes')
 
 const port = process.env.PORT || 8080;
 
+// const server = http.createServer(app);
+
+// const initializeSocketIO = require('./socketHandler');
+
 // Define allowed origins for CORS
 const allowedOrigins = ["http://localhost:3000"];
 
@@ -22,6 +26,12 @@ const corsOptions = {
   },
   credentials: true,
 };
+
+
+
+
+// // Initialize Socket.io
+// initializeSocketIO(server);
 
 // Middleware
 

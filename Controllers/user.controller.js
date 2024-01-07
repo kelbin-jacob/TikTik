@@ -12,6 +12,7 @@ const userDetails = require("../Models/userDetails.model");
 const refferalIncomeHistory = require("../Models/refferalIncomeHistory.model");
 const userLogin = require("../Models/userLogin.model");
 const uploads = require("../Middlewares/multer/multer.middleware");
+const incomeHistory=require('../Models/incomeHistory.model')
 
 const commonFunctions = require("../Utils/commonFunctions.utils");
 const twilioSmsService = require("../Utils/twilloSmsService.utils");
@@ -832,6 +833,86 @@ const userAddBankDetails = async (req, res, next) => {
   }
 };
 
+//PAYMENT WITHDRAW REQUEST
+const paymentWithdrawRequest = async (req, res, next) => {
+  try {
+    const requestMoney = req.body.requestMoney;
+
+    // Find customer details
+    const customerData = await userDetails.findOne({
+      where: { userLoginId: req.currentUserObj.userID },
+    });
+
+    if (!customerData) {
+      return res.status(400).json({
+        errorCode: ERROR_CODES.USER_NOT_FOUND,
+        message: ERROR_MESSAGES.USER_NOT_FOUND,
+      });
+    }
+
+    // Check if KYC and bank account are verified
+    if (customerData.kycVerified === false || customerData.bankAccountVerified === false) {
+      return res.status(400).json({
+        message: "Your KYC or bank account is not verified, please add if not added",
+      });
+    }
+
+    // Validate request amount
+    if (requestMoney < 100) {
+      return res.status(400).json({
+        message: "Request for withdrawal must be equal to or greater than 100",
+      });
+    }
+
+    if (requestMoney > customerData.totalAmount) {
+      return res.status(400).json({
+        message: "Request for withdrawal must be equal to or less than your balance",
+      });
+    }
+
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Create income withdrawal record
+      const incomeWithdrawal = await incomeHistory.create({
+        userLoginId: req.currentUserObj.userID,
+        price: requestMoney,
+        requestedDate: new Date(),
+        status: 1,
+        isActive: true,
+      }, { transaction });
+
+      // Update customer's total amount
+      if (incomeWithdrawal) {
+        customerData.totalAmount -= requestMoney;
+        await customerData.save({ transaction });
+      }
+
+      // Commit transaction
+      await transaction.commit();
+
+      return res.status(200).json({
+        message: "Withdraw request successfully created",
+        incomeWithdrawal,
+      });
+    } catch (updateError) {
+      // Rollback transaction on error
+      await transaction.rollback();
+      console.error(updateError);
+      return res.status(500).json({
+        errorCode: ERROR_CODES.UNEXPECTED_ERROR,
+        message: ERROR_MESSAGES.UNEXPECTED_ERROR,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      errorCode: ERROR_CODES.UNEXPECTED_ERROR,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR,
+    });
+  }
+};
+
 module.exports = {
   addSuperAdmin,
   login,
@@ -844,4 +925,5 @@ module.exports = {
   addUserDetails,
   editUserDetails,
   userAddBankDetails,
+  paymentWithdrawRequest
 };

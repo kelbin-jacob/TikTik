@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const userDetails = require('../Models/userDetails.model')
 const profile = require('../Models/profile.model')
 const refferalIncomeHistory=require('../Models/refferalIncomeHistory.model')
+const incomeHistory=require('../Models/incomeHistory.model')
 
 
 
@@ -71,6 +72,8 @@ userLogin.hasMany(refferalIncomeHistory);
 refferalIncomeHistory.belongsTo(userLogin)
 userLogin.hasMany(profile)
 profile.belongsTo(userLogin)
+userLogin.hasMany(incomeHistory);
+incomeHistory.belongsTo(userLogin)
 
 
 module.exports = userLogin;
