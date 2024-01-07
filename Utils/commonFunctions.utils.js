@@ -12,4 +12,9 @@ async function generateOTP() {
   }
 
   
+//   async function sendPushNotification(userId, message) {
+//   socket.emit('sendMessage', { userId, message });
+// }
+
+  
   module.exports = {generateOTP};

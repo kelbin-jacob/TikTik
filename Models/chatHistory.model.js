@@ -40,9 +40,6 @@ const chatHistory = sequelize.define(
     tableName: "chat_history",
   }
 );
-refferal.hasMany(userDetails)
-userDetails.belongsTo(refferal)
-refferal.hasMany(refferalIncomeHistory)
-refferalIncomeHistory.belongsTo(refferal)
+
 
 module.exports = chatHistory;
